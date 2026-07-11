@@ -155,6 +155,9 @@ export class RecipesRepository {
     if (query.cuisine) {
       builder = builder.eq('cuisine.slug', query.cuisine);
     }
+    if (query.author) {
+      builder = builder.eq('author.username', query.author);
+    }
     if (query.difficulty) {
       builder = builder.eq('difficulty', query.difficulty);
     }
