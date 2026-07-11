@@ -62,6 +62,7 @@ export const listRecipesQuerySchema = z.object({
   cursor: z.string().datetime().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
   mine: z.coerce.boolean().optional(),
+  author: z.string().optional(), // username — for a profile page's recipe grid
 });
 export type ListRecipesQuery = z.infer<typeof listRecipesQuerySchema>;
 
