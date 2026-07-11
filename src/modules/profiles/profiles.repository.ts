@@ -7,7 +7,7 @@ const PUBLIC_COLUMNS =
 export class ProfilesRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
-  async findByUsername(username: string) {
+  async findByUsername(username: string, viewerId: string | null) {
     const { data, error } = await this.supabase
       .from('profiles')
       .select(`${PUBLIC_COLUMNS}, profile_cuisines(cuisines(id, name, slug))`)
@@ -15,7 +15,20 @@ export class ProfilesRepository {
       .maybeSingle();
 
     if (error) throw error;
-    return data;
+    if (!data) return null;
+
+    let is_following = false;
+    if (viewerId && viewerId !== data.id) {
+      const { data: followRow } = await this.supabase
+        .from('follows')
+        .select('follower_id')
+        .eq('follower_id', viewerId)
+        .eq('following_id', data.id)
+        .maybeSingle();
+      is_following = Boolean(followRow);
+    }
+
+    return { ...data, is_following };
   }
 
   async findById(userId: string) {
@@ -56,5 +69,24 @@ export class ProfilesRepository {
     }
 
     return this.findById(userId);
+  }
+
+  async follow(followerId: string, followingId: string) {
+    if (followerId === followingId) {
+      throw new Error("You can't follow yourself.");
+    }
+    const { error } = await this.supabase
+      .from('follows')
+      .upsert({ follower_id: followerId, following_id: followingId }, { onConflict: 'follower_id,following_id' });
+    if (error) throw error;
+  }
+
+  async unfollow(followerId: string, followingId: string) {
+    const { error } = await this.supabase
+      .from('follows')
+      .delete()
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId);
+    if (error) throw error;
   }
 }
