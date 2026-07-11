@@ -8,6 +8,7 @@ import rateLimitPlugin from './plugins/rate-limit';
 import healthRoutes from './modules/health/health.routes';
 import profilesRoutes from './modules/profiles/profiles.routes';
 import cuisinesRoutes from './modules/cuisines/cuisines.routes';
+import recipesRoutes from './modules/recipes/recipes.routes';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -32,6 +33,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(healthRoutes);
   await fastify.register(profilesRoutes, { prefix: '/v1' });
   await fastify.register(cuisinesRoutes, { prefix: '/v1' });
+  await fastify.register(recipesRoutes, { prefix: '/v1' });
 
   return fastify;
 }
