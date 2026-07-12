@@ -1,7 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { ProfilesRepository } from './profiles.repository';
 import { ProfilesService } from './profiles.service';
-import { updateProfileSchema } from './profiles.schema';
+import { updateProfileSchema, avatarUploadRequestSchema } from './profiles.schema';
 import { NotificationsRepository } from '../notifications/notifications.repository';
 
 const profilesRoutes: FastifyPluginAsync = async (fastify) => {
@@ -53,6 +53,20 @@ const profilesRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     return service.updateMyProfile(request.user!.id, parsed.data);
+  });
+
+  fastify.post('/profiles/me/avatar/upload-url', { preHandler: fastify.authenticate }, async (request, reply) => {
+    const parsed = avatarUploadRequestSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({
+        error: {
+          code: 'validation_error',
+          message: parsed.error.issues[0]?.message ?? 'Invalid input',
+          request_id: request.id,
+        },
+      });
+    }
+    return service.requestAvatarUpload(request.user!.id, parsed.data.filename);
   });
 
   fastify.post<{ Params: { username: string } }>(
