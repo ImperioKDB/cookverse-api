@@ -98,6 +98,22 @@ export class SocialRepository {
     return data;
   }
 
+  /**
+   * Reads the `recipes` table directly rather than going through
+   * RecipesRepository — this is a cross-module read for notification
+   * purposes only, not recipe business logic, so a full module dependency
+   * would be overkill for one column.
+   */
+  async getRecipeAuthor(recipeId: string) {
+    const { data, error } = await this.supabase
+      .from('recipes')
+      .select('author_id')
+      .eq('id', recipeId)
+      .maybeSingle();
+    if (error) throw error;
+    return data?.author_id ?? null;
+  }
+
   async softDeleteComment(id: string) {
     const { error } = await this.supabase
       .from('comments')
