@@ -13,6 +13,7 @@ import {
   updateRecipeSchema,
 } from './recipes.schema';
 import { SocialRepository } from '../social/social.repository';
+import { CollectionsRepository } from '../collections/collections.repository';
 
 function sendZodError(reply: import('fastify').FastifyReply, requestId: string, message?: string) {
   return reply.code(400).send({
@@ -23,6 +24,7 @@ function sendZodError(reply: import('fastify').FastifyReply, requestId: string, 
 const recipesRoutes: FastifyPluginAsync = async (fastify) => {
   const service = new RecipesService(new RecipesRepository(fastify.supabase));
   const socialRepository = new SocialRepository(fastify.supabase);
+  const collectionsRepository = new CollectionsRepository(fastify.supabase);
 
   // --- Create -----------------------------------------------------------
   fastify.post('/recipes', { preHandler: fastify.authenticate }, async (request, reply) => {
@@ -62,11 +64,16 @@ const recipesRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const recipe = await service.getDetail(request.params.idOrSlug, viewerId);
       let is_liked = false;
+      let is_saved = false;
       if (viewerId) {
-        const likedIds = await socialRepository.isLikedByMany(viewerId, 'recipe', [recipe.id]);
+        const [likedIds, savedIds] = await Promise.all([
+          socialRepository.isLikedByMany(viewerId, 'recipe', [recipe.id]),
+          collectionsRepository.isSavedByMany(viewerId, [recipe.id]),
+        ]);
         is_liked = likedIds.has(recipe.id);
+        is_saved = savedIds.has(recipe.id);
       }
-      return { ...recipe, is_liked };
+      return { ...recipe, is_liked, is_saved };
     } catch (err) {
       if (err instanceof RecipeNotFoundError) {
         return reply.code(404).send({
