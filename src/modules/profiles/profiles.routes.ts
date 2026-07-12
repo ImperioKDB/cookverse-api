@@ -57,6 +57,7 @@ const profilesRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/profiles/me/avatar/upload-url', { preHandler: fastify.authenticate }, async (request, reply) => {
     const parsed = avatarUploadRequestSchema.safeParse(request.body);
+
     if (!parsed.success) {
       return reply.code(400).send({
         error: {
@@ -66,7 +67,10 @@ const profilesRoutes: FastifyPluginAsync = async (fastify) => {
         },
       });
     }
-    return service.requestAvatarUpload(request.user!.id, parsed.data.filename);
+
+    const repository = new ProfilesRepository(fastify.supabase);
+    const upload = await repository.createAvatarUploadUrl(request.user!.id, parsed.data.filename);
+    return upload;
   });
 
   fastify.post<{ Params: { username: string } }>(
