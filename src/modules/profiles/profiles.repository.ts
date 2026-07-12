@@ -89,4 +89,16 @@ export class ProfilesRepository {
       .eq('following_id', followingId);
     if (error) throw error;
   }
+
+  async createAvatarUploadUrl(userId: string, filename: string) {
+    // Timestamped path (not a fixed userId.jpg) so a freshly uploaded avatar
+    // isn't served stale from a CDN/browser cache keyed on the old URL.
+    const path = `${userId}/${Date.now()}-${filename}`;
+    const { data, error } = await this.supabase.storage
+      .from('profile-avatars')
+      .createSignedUploadUrl(path);
+
+    if (error) throw error;
+    return data; // { path, token, signedUrl }
+  }
 }
