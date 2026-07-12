@@ -2,9 +2,13 @@ import { FastifyPluginAsync } from 'fastify';
 import { ProfilesRepository } from './profiles.repository';
 import { ProfilesService } from './profiles.service';
 import { updateProfileSchema } from './profiles.schema';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 
 const profilesRoutes: FastifyPluginAsync = async (fastify) => {
-  const service = new ProfilesService(new ProfilesRepository(fastify.supabase));
+  const service = new ProfilesService(
+    new ProfilesRepository(fastify.supabase),
+    new NotificationsRepository(fastify.supabase)
+  );
 
   // Optional auth: profiles are publicly readable, but a logged-in viewer
   // also gets `is_following` on the response.
