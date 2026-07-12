@@ -81,6 +81,13 @@ export class ProfilesRepository {
     if (error) throw error;
   }
 
+  async createAvatarUploadUrl(userId: string, filename: string) {
+    const path = `${userId}/${Date.now()}-${filename}`;
+    const { data, error } = await this.supabase.storage.from('avatars').createSignedUploadUrl(path);
+    if (error) throw error;
+    return data; // { path, token, signedUrl }
+  }
+
   async unfollow(followerId: string, followingId: string) {
     const { error } = await this.supabase
       .from('follows')
@@ -88,17 +95,5 @@ export class ProfilesRepository {
       .eq('follower_id', followerId)
       .eq('following_id', followingId);
     if (error) throw error;
-  }
-
-  async createAvatarUploadUrl(userId: string, filename: string) {
-    // Timestamped path (not a fixed userId.jpg) so a freshly uploaded avatar
-    // isn't served stale from a CDN/browser cache keyed on the old URL.
-    const path = `${userId}/${Date.now()}-${filename}`;
-    const { data, error } = await this.supabase.storage
-      .from('profile-avatars')
-      .createSignedUploadUrl(path);
-
-    if (error) throw error;
-    return data; // { path, token, signedUrl }
   }
 }
