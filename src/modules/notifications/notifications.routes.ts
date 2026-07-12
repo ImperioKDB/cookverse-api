@@ -6,6 +6,14 @@ import { listNotificationsQuerySchema } from './notifications.schema';
 const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
   const service = new NotificationsService(new NotificationsRepository(fastify.supabase));
 
+  // Lightweight — the TopBar polls this every 30s and previously had to hit
+  // GET /notifications (full list query + actor join) just to read the
+  // unread_count field off the response. This is a single count(*) query.
+  fastify.get('/notifications/unread-count', { preHandler: fastify.authenticate }, async (request) => {
+    const unread_count = await service.unreadCount(request.user!.id);
+    return { unread_count };
+  });
+
   fastify.get('/notifications', { preHandler: fastify.authenticate }, async (request, reply) => {
     const parsed = listNotificationsQuerySchema.safeParse(request.query);
     if (!parsed.success) {
