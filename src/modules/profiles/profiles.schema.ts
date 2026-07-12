@@ -4,6 +4,7 @@ export const skillLevelEnum = z.enum(['beginner', 'home_cook', 'skilled', 'profe
 
 export const updateProfileSchema = z.object({
   full_name: z.string().min(1).max(120).optional(),
+  avatar_url: z.string().url().optional(),
   bio: z.string().max(500).optional(),
   skill_level: skillLevelEnum.optional(),
   location_text: z.string().max(120).optional(),
@@ -15,3 +16,7 @@ export const updateProfileSchema = z.object({
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+export const avatarUploadRequestSchema = z.object({
+  filename: z.string().min(1).max(200),
+});
