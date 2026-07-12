@@ -32,8 +32,4 @@ export class ProfilesService {
     if (!target) throw new Error('profile_not_found');
     await this.repository.unfollow(viewerId, target.id);
   }
-
-  requestAvatarUpload(userId: string, filename: string) {
-    return this.repository.createAvatarUploadUrl(userId, filename);
-  }
 }
