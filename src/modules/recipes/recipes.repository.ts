@@ -186,6 +186,42 @@ export class RecipesRepository {
     return data;
   }
 
+  /**
+   * Chronological feed: recipes from people the viewer follows. No new
+   * table — just `follows` joined against `recipes`. Empty-follows case is
+   * short-circuited rather than sent to Postgres as an empty `IN (...)`.
+   */
+  async listFeed(viewerId: string, cursor: string | undefined, limit: number) {
+    const { data: followedRows, error: followError } = await this.supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', viewerId);
+    if (followError) throw followError;
+
+    const followedIds = followedRows.map((row) => row.following_id);
+    if (followedIds.length === 0) return [];
+
+    let builder = this.supabase
+      .from('recipes')
+      .select(
+        `id, title, slug, cover_image_url, difficulty, total_time_minutes, servings,
+         like_count, save_count, rating_avg, published_at,
+         author:profiles(username, avatar_url),
+         cuisine:cuisines(name, slug)`
+      )
+      .in('author_id', followedIds)
+      .eq('status', 'published')
+      .eq('visibility', 'public')
+      .order('published_at', { ascending: false })
+      .limit(limit);
+
+    if (cursor) builder = builder.lt('published_at', cursor);
+
+    const { data, error } = await builder;
+    if (error) throw error;
+    return data;
+  }
+
   async createMediaUploadUrl(userId: string, recipeId: string, filename: string) {
     const path = `${userId}/${recipeId}/${Date.now()}-${filename}`;
     const { data, error } = await this.supabase.storage
