@@ -12,7 +12,6 @@ import recipesRoutes from './modules/recipes/recipes.routes';
 import socialRoutes from './modules/social/social.routes';
 import feedRoutes from './modules/feed/feed.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
-import collectionsRoutes from './modules/collections/collections.routes';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -41,7 +40,6 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(socialRoutes, { prefix: '/v1' });
   await fastify.register(feedRoutes, { prefix: '/v1' });
   await fastify.register(notificationsRoutes, { prefix: '/v1' });
-  await fastify.register(collectionsRoutes, { prefix: '/v1' });
 
   return fastify;
 }
