@@ -7,9 +7,13 @@ import {
   SocialService,
 } from './social.service';
 import { createCommentSchema, likeToggleSchema, listCommentsQuerySchema } from './social.schema';
+import { NotificationsRepository } from '../notifications/notifications.repository';
 
 const socialRoutes: FastifyPluginAsync = async (fastify) => {
-  const service = new SocialService(new SocialRepository(fastify.supabase));
+  const service = new SocialService(
+    new SocialRepository(fastify.supabase),
+    new NotificationsRepository(fastify.supabase)
+  );
 
   fastify.post('/social/likes', { preHandler: fastify.authenticate }, async (request, reply) => {
     const parsed = likeToggleSchema.safeParse(request.body);
