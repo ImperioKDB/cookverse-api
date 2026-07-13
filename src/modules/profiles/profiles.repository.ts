@@ -2,7 +2,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { UpdateProfileInput } from './profiles.schema';
 
 const PUBLIC_COLUMNS =
-  'id, username, full_name, avatar_url, bio, skill_level, follower_count, following_count, recipe_count, created_at';
+  'id, username, full_name, avatar_url, bio, skill_level, follower_count, following_count, recipe_count, onboarding_completed, created_at';
 
 export class ProfilesRepository {
   constructor(private readonly supabase: SupabaseClient) {}
