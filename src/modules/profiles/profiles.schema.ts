@@ -13,6 +13,7 @@ export const updateProfileSchema = z.object({
   // behavior for a short list; move to add/remove endpoints only if this
   // ever needs to scale past a few dozen selections.
   cuisine_ids: z.array(z.string().uuid()).max(20).optional(),
+  onboarding_completed: z.boolean().optional(),
 });
 
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
