@@ -29,3 +29,5 @@ const supabasePlugin: FastifyPluginAsync = async (fastify) => {
 };
 
 export default fp(supabasePlugin, { name: 'supabase' });
+
+
