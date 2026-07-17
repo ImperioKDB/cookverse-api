@@ -81,6 +81,22 @@ export class ProfilesRepository {
     if (error) throw error;
   }
 
+  /**
+   * Whether `followerId` already follows `followingId`. Used by
+   * ProfilesService.follow() to detect a "follow back" before the new
+   * follow row is created, for the follow-back XP event.
+   */
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .maybeSingle();
+    if (error) throw error;
+    return Boolean(data);
+  }
+
   async createAvatarUploadUrl(userId: string, filename: string) {
     const path = `${userId}/${Date.now()}-${filename}`;
     const { data, error } = await this.supabase.storage.from('avatars').createSignedUploadUrl(path);

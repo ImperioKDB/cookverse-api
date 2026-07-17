@@ -14,6 +14,8 @@ import {
 } from './recipes.schema';
 import { SocialRepository } from '../social/social.repository';
 import { CollectionsRepository } from '../collections/collections.repository';
+import { GamificationRepository } from '../gamification/gamification.repository';
+import { GamificationService } from '../gamification/gamification.service';
 
 function sendZodError(reply: import('fastify').FastifyReply, requestId: string, message?: string) {
   return reply.code(400).send({
@@ -22,7 +24,10 @@ function sendZodError(reply: import('fastify').FastifyReply, requestId: string, 
 }
 
 const recipesRoutes: FastifyPluginAsync = async (fastify) => {
-  const service = new RecipesService(new RecipesRepository(fastify.supabase));
+  const service = new RecipesService(
+    new RecipesRepository(fastify.supabase),
+    new GamificationService(new GamificationRepository(fastify.supabase))
+  );
   const socialRepository = new SocialRepository(fastify.supabase);
   const collectionsRepository = new CollectionsRepository(fastify.supabase);
 

@@ -3,11 +3,14 @@ import { ProfilesRepository } from './profiles.repository';
 import { ProfilesService } from './profiles.service';
 import { updateProfileSchema, avatarUploadRequestSchema } from './profiles.schema';
 import { NotificationsRepository } from '../notifications/notifications.repository';
+import { GamificationRepository } from '../gamification/gamification.repository';
+import { GamificationService } from '../gamification/gamification.service';
 
 const profilesRoutes: FastifyPluginAsync = async (fastify) => {
   const service = new ProfilesService(
     new ProfilesRepository(fastify.supabase),
-    new NotificationsRepository(fastify.supabase)
+    new NotificationsRepository(fastify.supabase),
+    new GamificationService(new GamificationRepository(fastify.supabase))
   );
 
   // Optional auth: profiles are publicly readable, but a logged-in viewer

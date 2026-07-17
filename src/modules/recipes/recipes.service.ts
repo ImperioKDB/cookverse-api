@@ -1,4 +1,5 @@
 import { RecipesRepository } from './recipes.repository';
+import { GamificationService } from '../gamification/gamification.service';
 import { ListRecipesQuery, UpdateRecipeInput } from './recipes.schema';
 
 export class RecipeNotFoundError extends Error {}
@@ -10,7 +11,10 @@ export class RecipeIncompleteError extends Error {
 }
 
 export class RecipesService {
-  constructor(private readonly repository: RecipesRepository) {}
+  constructor(
+    private readonly repository: RecipesRepository,
+    private readonly gamification: GamificationService
+  ) {}
 
   create(authorId: string, title?: string) {
     return this.repository.create(authorId, title);
@@ -51,7 +55,15 @@ export class RecipesService {
     if (recipe.recipe_steps.length === 0) missing.push('at least one step');
     if (missing.length > 0) throw new RecipeIncompleteError(missing);
 
-    return this.repository.publish(id);
+    const published = await this.repository.publish(id);
+
+    // XP for Phase 1's gamification baseline. Only reachable via this one
+    // transition into 'published' — there's no unpublish/republish flow
+    // yet, so this can't double-award for the same recipe today. Revisit
+    // if one is ever added.
+    await this.gamification.awardXp(userId, 'recipe_published', 'recipe', id);
+
+    return published;
   }
 
   async remove(id: string, userId: string) {

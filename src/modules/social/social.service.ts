@@ -1,5 +1,6 @@
 import { SocialRepository } from './social.repository';
 import { NotificationsRepository } from '../notifications/notifications.repository';
+import { GamificationService } from '../gamification/gamification.service';
 import { CreateCommentInput, LikeToggleInput } from './social.schema';
 
 export class CommentForbiddenError extends Error {}
@@ -13,7 +14,8 @@ export class NestingTooDeepError extends Error {
 export class SocialService {
   constructor(
     private readonly repository: SocialRepository,
-    private readonly notifications: NotificationsRepository
+    private readonly notifications: NotificationsRepository,
+    private readonly gamification: GamificationService
   ) {}
 
   async like(userId: string, input: LikeToggleInput) {
@@ -63,6 +65,11 @@ export class SocialService {
         await this.notifications.create(recipeAuthorId, authorId, 'comment', 'recipe', input.commentable_id);
       }
     }
+
+    // XP for the commenter, regardless of nesting level — engagement is
+    // engagement. Awarded after the write succeeds, same ordering as the
+    // notification above.
+    await this.gamification.awardXp(authorId, 'comment_posted', input.commentable_type, input.commentable_id);
 
     return comment;
   }

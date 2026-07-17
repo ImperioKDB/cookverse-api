@@ -8,11 +8,14 @@ import {
 } from './social.service';
 import { createCommentSchema, likeToggleSchema, listCommentsQuerySchema } from './social.schema';
 import { NotificationsRepository } from '../notifications/notifications.repository';
+import { GamificationRepository } from '../gamification/gamification.repository';
+import { GamificationService } from '../gamification/gamification.service';
 
 const socialRoutes: FastifyPluginAsync = async (fastify) => {
   const service = new SocialService(
     new SocialRepository(fastify.supabase),
-    new NotificationsRepository(fastify.supabase)
+    new NotificationsRepository(fastify.supabase),
+    new GamificationService(new GamificationRepository(fastify.supabase))
   );
 
   fastify.post('/social/likes', { preHandler: fastify.authenticate }, async (request, reply) => {
