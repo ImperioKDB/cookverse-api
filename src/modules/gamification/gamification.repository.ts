@@ -6,16 +6,20 @@ export class GamificationRepository {
 
   async recordXpEvent(
     userId: string,
-    eventType: XpEventType,
+    action: XpEventType,
     xpAmount: number,
     entityType?: string,
     entityId?: string
   ) {
+    // profiles.xp_total and .current_level are kept in sync by the
+    // trg_xp_events_sync trigger on this insert — never updated directly
+    // here, same pattern as every other denormalized counter in this
+    // project.
     const { error } = await this.supabase
       .from('xp_events')
       .insert({
         user_id: userId,
-        event_type: eventType,
+        action,
         xp_amount: xpAmount,
         entity_type: entityType ?? null,
         entity_id: entityId ?? null,

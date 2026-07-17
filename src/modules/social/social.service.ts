@@ -69,7 +69,7 @@ export class SocialService {
     // XP for the commenter, regardless of nesting level — engagement is
     // engagement. Awarded after the write succeeds, same ordering as the
     // notification above.
-    await this.gamification.awardXp(authorId, 'comment_posted', input.commentable_type, input.commentable_id);
+    await this.gamification.awardXp(authorId, 'comment_created', input.commentable_type, input.commentable_id);
 
     return comment;
   }
