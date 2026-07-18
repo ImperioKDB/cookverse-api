@@ -14,6 +14,7 @@ import feedRoutes from './modules/feed/feed.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
 import collectionsRoutes from './modules/collections/collections.routes';
 import gamificationRoutes from './modules/gamification/gamification.routes';
+import mealPlansRoutes from './modules/meal-plans/meal-plans.routes';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const fastify = Fastify({
@@ -44,6 +45,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(notificationsRoutes, { prefix: '/v1' });
   await fastify.register(collectionsRoutes, { prefix: '/v1' });
   await fastify.register(gamificationRoutes, { prefix: '/v1' });
+  await fastify.register(mealPlansRoutes, { prefix: '/v1' });
 
   return fastify;
 }
