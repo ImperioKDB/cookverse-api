@@ -1,0 +1,59 @@
+name: Keep Render API awake
+
+# Only pings during an active-hours WINDOW, not 24/7 -- this is what
+# actually controls monthly instance-hour usage, not the ping interval.
+# Render bills for however long the instance stays up, so letting it
+# sleep outside your real usage hours is the lever, not pinging faster.
+#
+# Tuned for UTC+1: active window is 05:00-22:59 UTC, which is 06:00-23:59
+# local -- sleeps during local midnight-6am, per your request.
+#
+# Math at this window: 18 active hours/day x 30 days = ~540 instance-
+# hours/month (558 in a 31-day month), comfortably under Render's 750/
+# month free cap -- leaves margin for real traffic in-window and for
+# backend redeploys, which also consume instance-hours.
+#
+# Trade you're accepting: any real request during the sleeping hours
+# still gets a cold start. This schedule doesn't remove that, it just
+# confines it to hours you've decided are low-traffic.
+
+on:
+  schedule:
+    - cron: '*/10 5-22 * * *'   # every 10 min, 05:00-22:59 UTC = 06:00-23:59 local (UTC+1)
+  workflow_dispatch: {}          # manual run button, also works as an on-demand ping outside the window
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render backend (with retries for cold-start timeouts)
+        run: |
+          URL="${{ vars.RENDER_API_URL }}/health"
+          echo "Pinging $URL"
+
+          # Up to 3 attempts, 15s apart. --max-time 60 gives a full
+          # cold-start window per attempt. Status 000 = timeout/no
+          # response (likely mid-wakeup) -- retried rather than failed
+          # immediately, since that's the expected shape of a cold start,
+          # not necessarily an outage.
+          for attempt in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "$URL")
+            echo "Attempt $attempt: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ] || [ "$STATUS" = "204" ]; then
+              echo "Backend is alive"
+              exit 0
+            elif [ "$STATUS" = "000" ]; then
+              echo "Timeout on attempt $attempt -- may still be waking up"
+              sleep 15
+            elif [ "$STATUS" -ge 500 ]; then
+              echo "::error::Server error ($STATUS)"
+              exit 1
+            else
+              echo "Responded with $STATUS -- alive"
+              exit 0
+            fi
+          done
+
+          echo "::error::All 3 attempts timed out -- API may be down or RENDER_API_URL is stale"
+          exit 1
